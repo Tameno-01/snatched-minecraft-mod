@@ -20,49 +20,9 @@ public class Snatched implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-
-		UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
-
-			boolean willSnatch = hand == Hand.MAIN_HAND && player.getStackInHand(hand).isEmpty() && canSnatch(entity);
-
-			if (world.isClient()) {
-				if (willSnatch) {
-					return ActionResult.SUCCESS;
-				}
-				return ActionResult.PASS;
-			}
-
-			if(willSnatch)
-			{
-				//Spawn hand seat
-				HandSeatEntity handSeat = new HandSeatEntity(ModEntities.HAND_SEAT, world);
-				handSeat.setHandOwner(player);
-				world.spawnEntity(handSeat);
-				//Make entity ride hand seat
-				entity.startRiding(handSeat, true);
-
-				return ActionResult.SUCCESS;
-
-			}
-			return ActionResult.PASS;
-
-		});
-
 		ModItems.registerModItems();
 		ModEntities.registerModEntities();
-
 	}
 
-	private boolean canSnatch(Entity entity) {
-		if (!(entity instanceof LivingEntity)) {
-			return false;
-		}
-		if (entity instanceof HorseEntity) {
-			return false;
-		}
-		if (entity instanceof ShulkerEntity) {
-			return false;
-		}
-		return true;
-	}
+
 }

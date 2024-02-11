@@ -5,13 +5,14 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.world.ServerEntityManager;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class HandSeatEntity extends Entity {
 
     private PlayerEntity handOwner;
+    private Hand ownerHand;
 
     public HandSeatEntity(EntityType<?> entityType, World world) {
         super(entityType, world);
@@ -23,10 +24,18 @@ public class HandSeatEntity extends Entity {
         updateHandPosition();
     }
 
+    public void setHandHand(Hand hand) {
+
+    }
+
     public void updateHandPosition() {
         float ownerSize = this.handOwner.getEyeHeight(this.handOwner.getPose());
 
         double side = 1.0;
+
+        if (ownerHand == Hand.OFF_HAND) {
+            side *= -1.0;
+        }
 
         Vec3d pos = new Vec3d(-ownerSize * side * 0.2, -ownerSize * 0.2, ownerSize * 0.5);
 
