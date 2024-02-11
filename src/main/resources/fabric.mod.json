@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "snatched",
+	"version": "${version}",
+	"name": "Snatched!",
+	"description": "A mod that allows you to pick up mobs and players with your hand",
+	"authors": [
+		"Tameno"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/myfirstmod/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.tameno.snatched.Snatched"
+		],
+		"client": [
+			"com.tameno.snatched.SnatchedClient"
+		],
+		"fabric-datagen": [
+			"com.tameno.snatched.SnatchedDataGenerator"
+		]
+	},
+	"mixins": [
+		"myfirstmod.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.15.6",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
