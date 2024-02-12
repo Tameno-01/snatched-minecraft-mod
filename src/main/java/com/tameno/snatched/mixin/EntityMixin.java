@@ -2,6 +2,7 @@ package com.tameno.snatched.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.tameno.snatched.Snatched;
 import com.tameno.snatched.entity.custom.HandSeatEntity;
 import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,6 +12,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(Entity.class)
 public class EntityMixin {
+
+    public EntityMixin() {
+        Snatched.LOGGER.info("Mixin class initialized");
+    }
     @Redirect(
             method = "pushAwayFrom",
             at = @At(
@@ -19,7 +24,7 @@ public class EntityMixin {
             )
     )
     private boolean isConnectedThroughVehicleOrIsSnatched(Entity instance, Entity entity) {
-        if (entity.getVehicle() instanceof HandSeatEntity) {
+        if (entity.getRootVehicle() instanceof HandSeatEntity) {
             return true;
         }
         return instance.isConnectedThroughVehicle(entity);

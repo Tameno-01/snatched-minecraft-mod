@@ -10,7 +10,7 @@ import net.minecraft.util.Identifier;
 
 public class ModItems {
 
-    public static final Item SNATCHING_GLOVE = registerItem("snatching_glove", new SnatchingGloveItem(new FabricItemSettings().maxCount(1)));
+    //public static final Item SNATCHING_GLOVE = registerItem("snatching_glove", new SnatchingGloveItem(new FabricItemSettings().maxCount(1)));
 
     private static Item registerItem(String name, Item item) {
         return Registry.register(Registries.ITEM, new Identifier(Snatched.MOD_ID, name), item);
