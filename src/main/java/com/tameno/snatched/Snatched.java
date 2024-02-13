@@ -6,6 +6,7 @@ import com.tameno.snatched.item.ModItems;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.ShulkerEntity;
@@ -37,7 +38,7 @@ public class Snatched implements ModInitializer {
 					hand == Hand.OFF_HAND &&
 					player.getStackInHand(Hand.OFF_HAND).isEmpty() &&
 					canSnatch(entity) &&
-					snatcherPlayer.snatched$getCurrentHandSeat() == null;
+					snatcherPlayer.snatched$getCurrentHandSeat(world) == null;
 
 			if (world.isClient()) {
 				return willSnatch ? ActionResult.SUCCESS : ActionResult.PASS;
@@ -64,7 +65,7 @@ public class Snatched implements ModInitializer {
 			}
 
 			Snatcher snatcherPlayer = (Snatcher) player;
-			HandSeatEntity handSeat = snatcherPlayer.snatched$getCurrentHandSeat();
+			HandSeatEntity handSeat = snatcherPlayer.snatched$getCurrentHandSeat(world);
 
 			boolean willUnSnatch = hand == Hand.OFF_HAND && handSeat != null;
 
@@ -77,6 +78,10 @@ public class Snatched implements ModInitializer {
 			}
 
 			BlockPos releasePos = hitResult.getBlockPos().offset(hitResult.getSide());
+			BlockState blockState = world.getBlockState(releasePos);
+			if (!blockState.getCollisionShape(world, releasePos).isEmpty()) {
+				return ActionResult.PASS;
+			}
 			Entity snatchedEntity = handSeat.getFirstPassenger();
 			snatchedEntity.dismountVehicle();
 			snatchedEntity.setPosition(releasePos.toCenterPos());
