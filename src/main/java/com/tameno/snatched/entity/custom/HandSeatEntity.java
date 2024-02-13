@@ -3,26 +3,40 @@ package com.tameno.snatched.entity.custom;
 import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.UUID;
+
 public class HandSeatEntity extends Entity {
 
     private static final String HAND_OWNER_KEY = "snatched_hand_owner";
+    private static final TrackedData<Optional<UUID>> HAND_OWNER_ID = DataTracker.registerData(HandSeatEntity.class, TrackedDataHandlerRegistry.OPTIONAL_UUID);
 
     private PlayerEntity handOwner;
 
     public HandSeatEntity(EntityType<?> entityType, World world) {
         super(entityType, world);
         this.noClip = true;
+        Optional<java.util.UUID> handOwnerId = this.dataTracker.get(HAND_OWNER_ID);
+        if (handOwnerId.isPresent()) {
+            this.handOwner = this.getWorld().getPlayerByUuid(handOwnerId.get());
+        }
     }
 
     public void setHandOwner(PlayerEntity newHandOwner) {
         this.handOwner = newHandOwner;
+        this.dataTracker.set(HAND_OWNER_ID, Optional.of(newHandOwner.getUuid()));
         updateHandPosition();
     }
 
@@ -44,11 +58,24 @@ public class HandSeatEntity extends Entity {
 
     @Override
     public void tick() {
-        if (this.getWorld().isClient()) {
-            return;
+
+        if (handOwner == null) {
+            Optional<java.util.UUID> handOwnerId = this.dataTracker.get(HAND_OWNER_ID);
+            if (handOwnerId.isPresent()) {
+                this.handOwner = this.getWorld().getPlayerByUuid(handOwnerId.get());
+            }
         }
 
-        if (this.handOwner == null || handOwner.isRemoved() || this.getFirstPassenger() == null) {
+        boolean isValid = !(this.handOwner == null || handOwner.isRemoved() || this.getFirstPassenger() == null);
+
+        if (this.getWorld().isClient()) {
+            if (!isValid) {
+                return;
+            }
+            updateHandPosition();
+        }
+
+        if (!isValid) {
             this.discard();
             return;
         }
@@ -68,7 +95,7 @@ public class HandSeatEntity extends Entity {
 
     @Override
     protected void readCustomDataFromNbt(NbtCompound nbt) {
-        handOwner = this.getWorld().getPlayerByUuid(nbt.getUuid(HAND_OWNER_KEY));
+        this.handOwner = this.getWorld().getPlayerByUuid(nbt.getUuid(HAND_OWNER_KEY));
     }
 
     @Override
@@ -78,6 +105,13 @@ public class HandSeatEntity extends Entity {
 
     @Override
     protected void initDataTracker() {
+        Optional<java.util.UUID> handOwnerId;
+        if (this.handOwner == null) {
+            handOwnerId = Optional.empty();
+        } else {
+            handOwnerId = Optional.of(this.handOwner.getUuid());
+        }
+        this.dataTracker.startTracking(HAND_OWNER_ID, handOwnerId);
     }
 
     @Override

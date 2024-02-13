@@ -31,8 +31,6 @@ public class Snatched implements ModInitializer {
 
 		UseEntityCallback.EVENT.register((PlayerEntity player, World world, Hand hand, Entity entity, EntityHitResult hitResult) -> {
 
-			ItemStack stack = player.getStackInHand(hand);
-
 			Snatcher snatcherPlayer = (Snatcher) player;
 
 			boolean willSnatch =
