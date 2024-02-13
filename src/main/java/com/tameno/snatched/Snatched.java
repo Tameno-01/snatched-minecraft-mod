@@ -17,6 +17,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,14 +78,16 @@ public class Snatched implements ModInitializer {
 				return ActionResult.PASS; // avoid potential crash (probably)
 			}
 
-			BlockPos releasePos = hitResult.getBlockPos().offset(hitResult.getSide());
-			BlockState blockState = world.getBlockState(releasePos);
-			if (!blockState.getCollisionShape(world, releasePos).isEmpty()) {
+			BlockPos releasePosBlock = hitResult.getBlockPos().offset(hitResult.getSide());
+			BlockState blockState = world.getBlockState(releasePosBlock);
+			if (!blockState.getCollisionShape(world, releasePosBlock).isEmpty()) {
 				return ActionResult.PASS;
 			}
+			Vec3d releasePos = releasePosBlock.toCenterPos();
+			releasePos = releasePos.add(0.0, -0.5, 0.0);
 			Entity snatchedEntity = handSeat.getFirstPassenger();
 			snatchedEntity.dismountVehicle();
-			snatchedEntity.setPosition(releasePos.toCenterPos());
+			snatchedEntity.setPosition(releasePos);
 
 			snatcherPlayer.snatched$setCurrentHandSeat(null);
 
