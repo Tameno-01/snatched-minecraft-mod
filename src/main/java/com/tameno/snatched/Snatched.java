@@ -36,7 +36,7 @@ public class Snatched implements ModInitializer {
 			boolean willSnatch =
 					hand == Hand.OFF_HAND &&
 					player.getStackInHand(Hand.OFF_HAND).isEmpty() &&
-					canSnatch(entity) &&
+					canSnatch(player, entity) &&
 					snatcherPlayer.snatched$getCurrentHandSeat(world) == null;
 
 			if (world.isClient()) {
@@ -97,14 +97,28 @@ public class Snatched implements ModInitializer {
 		ModEntities.registerModEntities();
 	}
 
-	private boolean canSnatch(Entity entity) {
+	private boolean canSnatch(PlayerEntity snatcher, Entity entity) {
 		if (!(entity instanceof LivingEntity)) {
 			return false;
 		}
 		if (entity instanceof ShulkerEntity) {
 			return false;
 		}
-		return true;
+		return getSize(snatcher) / getSize(entity) > 2.0;
 	}
 
+	public static double getSize(Entity entity) {
+		if (entity instanceof PlayerEntity) {
+			PlayerEntity player = (PlayerEntity) entity;
+			double baseHeight = player.getHeight();
+			if (player.isSneaking()) {
+				return baseHeight * 1.2;
+			}
+			if (player.isCrawling()) {
+				return baseHeight * 3.0;
+			}
+			return baseHeight;
+		}
+		return entity.getHeight();
+	}
 }
