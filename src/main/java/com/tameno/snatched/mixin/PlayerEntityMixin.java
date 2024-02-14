@@ -27,8 +27,6 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Snatcher
 
     @Shadow public abstract void resetLastAttackedTicks();
 
-    private static final String HAND_SEAT_KEY = "snatched_hand_seat";
-
     private UUID snatched$currentHandSeatUuid;
 
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
@@ -49,21 +47,5 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Snatcher
             return null;
         }
         return (HandSeatEntity) ((ServerWorld) world).getEntity(this.snatched$currentHandSeatUuid);
-    }
-
-    @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
-    private void readHandSeat(NbtCompound nbt, CallbackInfo callbackInfo) {
-        if (nbt.contains(HAND_SEAT_KEY)) {
-            this.snatched$currentHandSeatUuid = nbt.getUuid(HAND_SEAT_KEY);
-        } else {
-            this.snatched$currentHandSeatUuid = null;
-        }
-    }
-
-    @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
-    private void writeHandSeat(NbtCompound nbt, CallbackInfo callbackInfo) {
-        if (this.snatched$currentHandSeatUuid != null) {
-            nbt.putUuid(HAND_SEAT_KEY, this.snatched$currentHandSeatUuid);
-        }
     }
 }

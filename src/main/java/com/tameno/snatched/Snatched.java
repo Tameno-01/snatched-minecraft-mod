@@ -104,7 +104,7 @@ public class Snatched implements ModInitializer {
 		if (entity instanceof ShulkerEntity) {
 			return false;
 		}
-		return getSize(snatcher) / getSize(entity) > 2.0;
+		return getSize(snatcher) / getSize(entity) >= 2.0;
 	}
 
 	public static double getSize(Entity entity) {
