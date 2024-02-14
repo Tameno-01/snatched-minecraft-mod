@@ -70,7 +70,12 @@ public class HandSeatEntity extends Entity {
             }
         }
 
-        boolean isValid = !(this.handOwner == null || handOwner.isRemoved() || this.getFirstPassenger() == null);
+        boolean isValid = !(
+            this.handOwner == null ||
+            this.handOwner.isRemoved() ||
+            this.getFirstPassenger() == null ||
+            this.handOwner.getWorld() != this.getWorld()
+        );
 
         if (this.getWorld().isClient()) {
             if (!isValid) {

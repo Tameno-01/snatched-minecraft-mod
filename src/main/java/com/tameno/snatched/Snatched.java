@@ -97,7 +97,7 @@ public class Snatched implements ModInitializer {
 		ModEntities.registerModEntities();
 	}
 
-	private boolean canSnatch(PlayerEntity snatcher, Entity entity) {
+	private static boolean canSnatch(PlayerEntity snatcher, Entity entity) {
 		if (!(entity instanceof LivingEntity)) {
 			return false;
 		}
