@@ -38,24 +38,26 @@ public class HandSeatEntity extends Entity {
     public void setHandOwner(PlayerEntity newHandOwner) {
         this.handOwner = newHandOwner;
         this.dataTracker.set(HAND_OWNER_ID, Optional.of(newHandOwner.getUuid()));
-        updateHandPosition();
     }
 
     public void updateHandPosition() {
         double ownerSize = Snatched.getSize(this.handOwner);
-
+        double passengerSize = Snatched.getSize(this.getFirstPassenger());
+        double distance = ownerSize + passengerSize;
+        /*
         double side = -1.0;
         if (this.handOwner.getMainArm() == Arm.LEFT) {
             side *= -1.0;
         }
+        */
 
-        Vec3d pos = new Vec3d(-ownerSize * side * 0.3, -ownerSize * 0.3, ownerSize * 0.5);
+        Vec3d pos = new Vec3d(/*-distance * side * 0.1*/0.0, -distance * 0.2, distance * 0.45);
 
         pos = pos.rotateX(this.handOwner.getPitch() * -0.01745329251f);
         pos = pos.rotateY(this.handOwner.getYaw() * -0.01745329251f);
 
         pos = pos.add(this.handOwner.getPos());
-        pos = pos.add(0,  this.handOwner.getEyeHeight(this.handOwner.getPose()), 0);
+        pos = pos.add(0,  this.handOwner.getEyeHeight(this.handOwner.getPose()) - passengerSize / 2.0, 0);
 
         this.setPosition(pos);
     }

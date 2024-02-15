@@ -49,6 +49,7 @@ public class Snatched implements ModInitializer {
 
 			HandSeatEntity newHandSeat = new HandSeatEntity(ModEntities.HAND_SEAT, world);
 			newHandSeat.setHandOwner(player);
+			newHandSeat.setPosition(player.getPos());
 			world.spawnEntity(newHandSeat);
 			entity.startRiding(newHandSeat, true);
 			snatcherPlayer.snatched$setCurrentHandSeat(newHandSeat);
@@ -114,7 +115,10 @@ public class Snatched implements ModInitializer {
 			if (player.isSneaking()) {
 				return baseHeight * 1.2;
 			}
-			if (player.isCrawling()) {
+			if (player.isInSwimmingPose()) {
+				return baseHeight * 3.0;
+			}
+			if (player.isFallFlying()) {
 				return baseHeight * 3.0;
 			}
 			return baseHeight;
