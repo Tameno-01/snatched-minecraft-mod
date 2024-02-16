@@ -9,6 +9,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,6 +31,10 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Snatcher
     @Shadow public abstract PlayerInventory getInventory();
 
     private UUID snatched$currentHandSeatUuid;
+
+    public Vec3d snatched$holdPosition;
+
+    public boolean snatched$flipWhenUsingLeftHandAsMainHand;
 
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
@@ -55,6 +60,22 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Snatcher
             return null;
         }
         return handSeat;
+    }
+
+    public Vec3d snatched$getHoldPosition() {
+        return snatched$holdPosition;
+    }
+
+    public void snatched$setHoldPosition(Vec3d newHoldPosition) {
+        snatched$holdPosition = newHoldPosition;
+    }
+
+    public boolean snatched$getFlipWhenUsingLeftHandAsMainHand() {
+        return snatched$flipWhenUsingLeftHandAsMainHand;
+    }
+
+    public void snatched$setFlipWhenUsingLeftHandAsMainHand(boolean newFlipWhenUsingLeftHandAsMainHand) {
+        snatched$flipWhenUsingLeftHandAsMainHand = newFlipWhenUsingLeftHandAsMainHand;
     }
 
     @Inject(method = "tick", at = @At("HEAD"))

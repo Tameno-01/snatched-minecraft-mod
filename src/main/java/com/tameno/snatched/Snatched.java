@@ -6,14 +6,16 @@ import com.tameno.snatched.item.ModItems;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -28,6 +30,10 @@ public class Snatched implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+
+		ModItems.registerModItems();
+		ModEntities.registerModEntities();
+		SnatcherSettings.loadSettings();
 
 		UseEntityCallback.EVENT.register((PlayerEntity player, World world, Hand hand, Entity entity, EntityHitResult hitResult) -> {
 
@@ -94,8 +100,11 @@ public class Snatched implements ModInitializer {
 
 		});
 
-		ModItems.registerModItems();
-		ModEntities.registerModEntities();
+		/*
+		ServerLifecycleEvents.SERVER_STARTING.register((server) -> {
+			Path savePath = server.getSavePath(WorldSavePath.ROOT).resolve(Snatched.MOD_ID).normalize();
+		});
+		*/
 	}
 
 	private static boolean canSnatch(PlayerEntity snatcher, Entity entity) {

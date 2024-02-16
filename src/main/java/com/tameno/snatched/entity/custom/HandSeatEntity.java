@@ -1,6 +1,7 @@
 package com.tameno.snatched.entity.custom;
 
 import com.tameno.snatched.Snatched;
+import com.tameno.snatched.SnatcherSettings;
 import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -26,6 +27,8 @@ public class HandSeatEntity extends Entity {
 
     private PlayerEntity handOwner;
 
+    private SnatcherSettings settings;
+
     public HandSeatEntity(EntityType<?> entityType, World world) {
         super(entityType, world);
         this.noClip = true;
@@ -33,6 +36,7 @@ public class HandSeatEntity extends Entity {
         if (handOwnerId.isPresent()) {
             this.handOwner = this.getWorld().getPlayerByUuid(handOwnerId.get());
         }
+        settings = SnatcherSettings.getInstance();
     }
 
     public void setHandOwner(PlayerEntity newHandOwner) {
@@ -44,16 +48,15 @@ public class HandSeatEntity extends Entity {
         double ownerSize = Snatched.getSize(this.handOwner);
         double passengerSize = Snatched.getSize(this.getFirstPassenger());
         double distance = ownerSize + passengerSize * 2.0;
-        double side = -1.0;
-        if (this.handOwner.getMainArm() == Arm.LEFT) {
-            side *= -1.0;
+        double side = 1.0;
+        if (this.settings.flipWhenUsingLeftHandAsMainHand && this.handOwner.getMainArm() == Arm.LEFT) {
+            side = -1.0;
         }
 
-        Vec3d pos = new Vec3d(-distance * side * 0.18, -distance * 0.2, distance * 0.25);
-
+        Vec3d pos = this.settings.holdPosition;
+        pos = pos.multiply(new Vec3d(distance * side, distance, distance));
         pos = pos.rotateX(this.handOwner.getPitch() * -0.01745329251f);
         pos = pos.rotateY(this.handOwner.getYaw() * -0.01745329251f);
-
         pos = pos.add(this.handOwner.getPos());
         pos = pos.add(0,  this.handOwner.getEyeHeight(this.handOwner.getPose()) - passengerSize / 2.0, 0);
 
