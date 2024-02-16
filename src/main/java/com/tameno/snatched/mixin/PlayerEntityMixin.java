@@ -44,20 +44,23 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Snatcher
     }
 
     public HandSeatEntity snatched$getCurrentHandSeat(World world) {
-
         if (this.snatched$currentHandSeatUuid == null) {
             return null;
         }
-        return (HandSeatEntity) ((ServerWorld) world).getEntity(this.snatched$currentHandSeatUuid);
+        HandSeatEntity handSeat = (HandSeatEntity) ((ServerWorld) world).getEntity(this.snatched$currentHandSeatUuid);
+        if (handSeat == null) {
+            return null;
+        }
+        if (handSeat.isRemoved()) {
+            return null;
+        }
+        return handSeat;
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void cancelOffhandSlotIfNecessary(CallbackInfo callbackInfo) {
         HandSeatEntity handSeat = this.snatched$getCurrentHandSeat(this.getWorld());
         if (handSeat == null) {
-            return;
-        }
-        if (handSeat.isRemoved()) {
             return;
         }
         ItemStack stack = this.getStackInHand(Hand.OFF_HAND);

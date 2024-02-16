@@ -1,6 +1,5 @@
 package com.tameno.snatched.mixin;
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.tameno.snatched.entity.custom.HandSeatEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -15,6 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
@@ -27,11 +27,10 @@ public abstract class LivingEntityMixin extends Entity {
         super(type, world);
     }
 
-    @ModifyReturnValue(
-            method = "canHit",
-            at = @At("RETURN")
-    )
-    private boolean canHitAndIsntSnatched(boolean original) {
-        return original && !(this.getRootVehicle() instanceof HandSeatEntity);
+    @Inject(method = "canHit", at = @At("HEAD"), cancellable = true)
+    private void canHitAndIsntSnatched(CallbackInfoReturnable<Boolean> callbackInfo) {
+        if (this.getRootVehicle() instanceof HandSeatEntity) {
+            callbackInfo.setReturnValue(false);
+        }
     }
 }
