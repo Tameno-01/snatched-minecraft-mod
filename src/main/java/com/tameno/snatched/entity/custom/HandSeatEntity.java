@@ -43,15 +43,13 @@ public class HandSeatEntity extends Entity {
     public void updateHandPosition() {
         double ownerSize = Snatched.getSize(this.handOwner);
         double passengerSize = Snatched.getSize(this.getFirstPassenger());
-        double distance = ownerSize + passengerSize;
-        /*
+        double distance = ownerSize + passengerSize * 2.0;
         double side = -1.0;
         if (this.handOwner.getMainArm() == Arm.LEFT) {
             side *= -1.0;
         }
-        */
 
-        Vec3d pos = new Vec3d(/*-distance * side * 0.1*/0.0, -distance * 0.2, distance * 0.45);
+        Vec3d pos = new Vec3d(-distance * side * 0.18, -distance * 0.2, distance * 0.25);
 
         pos = pos.rotateX(this.handOwner.getPitch() * -0.01745329251f);
         pos = pos.rotateY(this.handOwner.getYaw() * -0.01745329251f);
