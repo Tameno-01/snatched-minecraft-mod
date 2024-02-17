@@ -1,7 +1,7 @@
 package com.tameno.snatched.entity.custom;
 
 import com.tameno.snatched.Snatched;
-import com.tameno.snatched.SnatcherSettings;
+import com.tameno.snatched.config.SnatcherSettings;
 import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -9,16 +9,13 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.util.Arm;
-import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.UUID;
 
 public class HandSeatEntity extends Entity {
@@ -36,7 +33,7 @@ public class HandSeatEntity extends Entity {
         if (handOwnerId.isPresent()) {
             this.handOwner = this.getWorld().getPlayerByUuid(handOwnerId.get());
         }
-        settings = SnatcherSettings.getInstance();
+        settings = SnatcherSettings.getLocalInstance();
     }
 
     public void setHandOwner(PlayerEntity newHandOwner) {
@@ -142,5 +139,10 @@ public class HandSeatEntity extends Entity {
     @Override
     public boolean canAvoidTraps() {
         return true;
+    }
+
+    @Override
+    public boolean canHit() {
+        return false;
     }
 }

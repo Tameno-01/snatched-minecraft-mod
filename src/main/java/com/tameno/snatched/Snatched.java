@@ -1,13 +1,11 @@
 package com.tameno.snatched;
 
 import com.tameno.snatched.entity.ModEntities;
+import com.tameno.snatched.config.SnatcherSettings;
 import com.tameno.snatched.entity.custom.HandSeatEntity;
-import com.tameno.snatched.item.ModItems;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -15,7 +13,6 @@ import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -31,7 +28,6 @@ public class Snatched implements ModInitializer {
 	@Override
 	public void onInitialize() {
 
-		ModItems.registerModItems();
 		ModEntities.registerModEntities();
 		SnatcherSettings.loadSettings();
 
