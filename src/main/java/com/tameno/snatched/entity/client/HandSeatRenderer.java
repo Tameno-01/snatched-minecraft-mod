@@ -6,6 +6,7 @@ import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.util.Identifier;
 
 public class HandSeatRenderer extends EntityRenderer<HandSeatEntity> {
+
     public HandSeatRenderer(EntityRendererFactory.Context ctx) {
         super(ctx);
     }

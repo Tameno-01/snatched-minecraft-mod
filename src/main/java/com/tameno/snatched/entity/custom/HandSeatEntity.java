@@ -1,6 +1,7 @@
 package com.tameno.snatched.entity.custom;
 
 import com.tameno.snatched.Snatched;
+import com.tameno.snatched.Snatcher;
 import com.tameno.snatched.config.SnatcherSettings;
 import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.entity.Entity;
@@ -14,7 +15,6 @@ import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.util.Arm;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,8 +24,6 @@ public class HandSeatEntity extends Entity {
 
     private PlayerEntity handOwner;
 
-    private SnatcherSettings settings;
-
     public HandSeatEntity(EntityType<?> entityType, World world) {
         super(entityType, world);
         this.noClip = true;
@@ -33,7 +31,6 @@ public class HandSeatEntity extends Entity {
         if (handOwnerId.isPresent()) {
             this.handOwner = this.getWorld().getPlayerByUuid(handOwnerId.get());
         }
-        settings = SnatcherSettings.getLocalInstance();
     }
 
     public void setHandOwner(PlayerEntity newHandOwner) {
@@ -42,15 +39,17 @@ public class HandSeatEntity extends Entity {
     }
 
     public void updateHandPosition() {
+        SnatcherSettings settings = ((Snatcher) this.handOwner).snatched$getSnatcherSettings();
+
         double ownerSize = Snatched.getSize(this.handOwner);
         double passengerSize = Snatched.getSize(this.getFirstPassenger());
         double distance = ownerSize + passengerSize * 2.0;
         double side = 1.0;
-        if (this.settings.flipWhenUsingLeftHandAsMainHand && this.handOwner.getMainArm() == Arm.LEFT) {
+        if (settings.flipWhenUsingLeftHandAsMainHand && this.handOwner.getMainArm() == Arm.LEFT) {
             side = -1.0;
         }
 
-        Vec3d pos = this.settings.holdPosition;
+        Vec3d pos = settings.holdPosition;
         pos = pos.multiply(new Vec3d(distance * side, distance, distance));
         pos = pos.rotateX(this.handOwner.getPitch() * -0.01745329251f);
         pos = pos.rotateY(this.handOwner.getYaw() * -0.01745329251f);

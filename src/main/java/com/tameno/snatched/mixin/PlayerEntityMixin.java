@@ -1,6 +1,8 @@
 package com.tameno.snatched.mixin;
 
+import com.tameno.snatched.Snatched;
 import com.tameno.snatched.Snatcher;
+import com.tameno.snatched.config.SnatcherSettings;
 import com.tameno.snatched.entity.custom.HandSeatEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -9,7 +11,6 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,11 +31,11 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Snatcher
 
     @Shadow public abstract PlayerInventory getInventory();
 
+    @Shadow public abstract void resetLastAttackedTicks();
+
+    @Shadow public abstract void setFireTicks(int fireTicks);
+
     private UUID snatched$currentHandSeatUuid;
-
-    public Vec3d snatched$holdPosition;
-
-    public boolean snatched$flipWhenUsingLeftHandAsMainHand;
 
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
@@ -62,20 +63,12 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Snatcher
         return handSeat;
     }
 
-    public Vec3d snatched$getHoldPosition() {
-        return snatched$holdPosition;
-    }
-
-    public void snatched$setHoldPosition(Vec3d newHoldPosition) {
-        snatched$holdPosition = newHoldPosition;
-    }
-
-    public boolean snatched$getFlipWhenUsingLeftHandAsMainHand() {
-        return snatched$flipWhenUsingLeftHandAsMainHand;
-    }
-
-    public void snatched$setFlipWhenUsingLeftHandAsMainHand(boolean newFlipWhenUsingLeftHandAsMainHand) {
-        snatched$flipWhenUsingLeftHandAsMainHand = newFlipWhenUsingLeftHandAsMainHand;
+    public SnatcherSettings snatched$getSnatcherSettings() {
+        SnatcherSettings settings = Snatched.allSnatcherSettings.get(this.getUuid());
+        if (settings == null) {
+            return new SnatcherSettings();
+        }
+        return settings;
     }
 
     @Inject(method = "tick", at = @At("HEAD"))

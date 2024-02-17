@@ -54,6 +54,7 @@ public class SnatcherSettings {
             }
             BufferedReader bufferedReader = Files.newBufferedReader(SAVE_PATH);
             SnatcherSettings loadedSettings = myGson.fromJson(bufferedReader, SnatcherSettings.class);
+            bufferedReader.close();
             String settingsJson = myGson.toJson(loadedSettings);
             settings.holdPosition = loadedSettings.holdPosition;
             settings.flipWhenUsingLeftHandAsMainHand = loadedSettings.flipWhenUsingLeftHandAsMainHand;
