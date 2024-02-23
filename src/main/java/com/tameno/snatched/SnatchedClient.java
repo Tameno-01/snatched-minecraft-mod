@@ -40,5 +40,9 @@ public class SnatchedClient implements ClientModInitializer {
             settings.writeToBuf(buffer);
             sender.sendPacket(sender.createPacket(Snatched.SNATCHER_SETTINGS_SYNC_ID, buffer));
         });
+
+        ClientPlayConnectionEvents.DISCONNECT.register((ClientPlayNetworkHandler handler, MinecraftClient client) -> {
+            Snatched.allSnatcherSettings.clear();
+        });
     }
 }
