@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.tameno.snatched.Snatched;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.Vec3d;
 
 import java.io.BufferedReader;
@@ -61,5 +62,17 @@ public class SnatcherSettings {
         } catch(Exception exception) {
             Snatched.LOGGER.error("Error loading snatcher (client) settings", exception);
         }
+    }
+
+    public void writeToBuf(PacketByteBuf buffer) {
+        buffer.writeDouble(this.holdPosition.x);
+        buffer.writeDouble(this.holdPosition.y);
+        buffer.writeDouble(this.holdPosition.z);
+        buffer.writeBoolean(this.flipWhenUsingLeftHandAsMainHand);
+    }
+
+    public void readFromBuf(PacketByteBuf buffer) {
+        this.holdPosition = new Vec3d(buffer.readDouble(), buffer.readDouble(), buffer.readDouble());
+        this.flipWhenUsingLeftHandAsMainHand = buffer.readBoolean();
     }
 }

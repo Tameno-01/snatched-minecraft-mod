@@ -30,19 +30,14 @@ public class SnatchedClient implements ClientModInitializer {
                 (MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buffer, PacketSender sender) -> {
             UUID playerUuid = buffer.readUuid();
             SnatcherSettings newSettings = new SnatcherSettings();
-            newSettings.holdPosition = new Vec3d(buffer.readDouble(), buffer.readDouble(), buffer.readDouble());
-            newSettings.flipWhenUsingLeftHandAsMainHand = buffer.readBoolean();
+            newSettings.readFromBuf(buffer);
             Snatched.allSnatcherSettings.put(playerUuid, newSettings);
-            Snatched.LOGGER.info("Snatcher settings recieved");
         });
 
         ClientPlayConnectionEvents.JOIN.register((ClientPlayNetworkHandler handler, PacketSender sender, MinecraftClient client) -> {
             PacketByteBuf buffer = PacketByteBufs.create();
             SnatcherSettings settings = SnatcherSettings.getLocalInstance();
-            buffer.writeDouble(settings.holdPosition.x);
-            buffer.writeDouble(settings.holdPosition.y);
-            buffer.writeDouble(settings.holdPosition.z);
-            buffer.writeBoolean(settings.flipWhenUsingLeftHandAsMainHand);
+            settings.writeToBuf(buffer);
             sender.sendPacket(sender.createPacket(Snatched.SNATCHER_SETTINGS_SYNC_ID, buffer));
         });
     }

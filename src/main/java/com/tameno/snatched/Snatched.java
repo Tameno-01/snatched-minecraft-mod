@@ -111,12 +111,11 @@ public class Snatched implements ModInitializer {
 
 		ServerPlayNetworking.registerGlobalReceiver(Snatched.SNATCHER_SETTINGS_SYNC_ID,
 				(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buffer, PacketSender responseSender) -> {
+			SnatcherSettings playerSettings = new SnatcherSettings();
+			playerSettings.readFromBuf(buffer);
 			PacketByteBuf newBuffer = PacketByteBufs.create();
 			newBuffer.writeUuid(player.getUuid());
-			newBuffer.writeDouble(buffer.readDouble());
-			newBuffer.writeDouble(buffer.readDouble());
-			newBuffer.writeDouble(buffer.readDouble());
-			newBuffer.writeBoolean(buffer.readBoolean());
+			playerSettings.writeToBuf(newBuffer);
 			for (ServerPlayerEntity playerToSendPacketTo : PlayerLookup.all(server)) {
 				ServerPlayNetworking.send(playerToSendPacketTo, Snatched.SNATCHER_SETTINGS_SYNC_ID, newBuffer);
 			}
