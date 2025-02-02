@@ -4,12 +4,14 @@ import com.tameno.snatched.entity.ModEntities;
 import com.tameno.snatched.config.SnatcherSettings;
 import com.tameno.snatched.entity.custom.HandSeatEntity;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.impl.game.LibClassifier;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.block.BlockState;
@@ -48,11 +50,16 @@ public class Snatched implements ModInitializer {
 
 			Snatcher snatcherPlayer = (Snatcher) player;
 
-			boolean willSnatch =
-					hand == Hand.OFF_HAND &&
-					player.getStackInHand(Hand.OFF_HAND).isEmpty() &&
-					canSnatch(player, entity) &&
-					snatcherPlayer.snatched$getCurrentHandSeat(world) == null;
+			boolean willSnatch = (
+				player.isSneaking()
+				&& (
+					player.getStackInHand(Hand.OFF_HAND).isEmpty()
+					|| player.getStackInHand((Hand.MAIN_HAND)).isEmpty()
+				)
+				&& canSnatch(player, entity)
+				&& snatcherPlayer.snatched$getCurrentHandSeat(world) == null
+				// && hand == Hand.OFF_HAND
+			);
 
 			if (world.isClient()) {
 				return willSnatch ? ActionResult.SUCCESS : ActionResult.PASS;
@@ -129,13 +136,12 @@ public class Snatched implements ModInitializer {
 	}
 
 	private static boolean canSnatch(PlayerEntity snatcher, Entity entity) {
-		if (!(entity instanceof LivingEntity)) {
-			return false;
-		}
-		if (entity instanceof ShulkerEntity) {
-			return false;
-		}
-		return getSize(snatcher) / getSize(entity) >= 2.0;
+		return (
+			entity instanceof LivingEntity
+			&& (!(entity instanceof ShulkerEntity))
+			&& (!entity.isSneaking())
+			&& getSize(snatcher) / getSize(entity) >= 1.75
+		);
 	}
 
 	public static double getSize(Entity entity) {
