@@ -58,7 +58,7 @@ public class Snatched implements ModInitializer {
 				)
 				&& canSnatch(player, entity)
 				&& snatcherPlayer.snatched$getCurrentHandSeat(world) == null
-				// && hand == Hand.OFF_HAND
+				&& (!isInSnatchChain(snatcherPlayer, entity, world))
 			);
 
 			if (world.isClient()) {
@@ -127,17 +127,26 @@ public class Snatched implements ModInitializer {
 				ServerPlayNetworking.send(playerToSendPacketTo, Snatched.SNATCHER_SETTINGS_SYNC_ID, newBuffer);
 			}
 		});
+	}
 
-		/*
-		ServerLifecycleEvents.SERVER_STARTING.register((server) -> {
-			Path savePath = server.getSavePath(WorldSavePath.ROOT).resolve(Snatched.MOD_ID).normalize();
-		});
-		*/
+	private static boolean isInSnatchChain(Snatcher snatcher, Entity entity, World world) {
+		while (entity != null) {
+			if (entity == snatcher) return true;
+			if (entity instanceof Snatcher snatcherEntity) {
+				HandSeatEntity handSeat = snatcherEntity.snatched$getCurrentHandSeat(world);
+				if (handSeat == null) return false;
+				entity = handSeat.getFirstPassenger();
+			} else {
+				return false;
+			}
+		}
+		return false;
 	}
 
 	private static boolean canSnatch(PlayerEntity snatcher, Entity entity) {
 		return (
 			entity instanceof LivingEntity
+			&& entity.getFirstPassenger() == null
 			&& (!(entity instanceof ShulkerEntity))
 			&& (!entity.isSneaking())
 			&& getSize(snatcher) / getSize(entity) >= 1.75
