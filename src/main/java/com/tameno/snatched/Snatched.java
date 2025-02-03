@@ -180,7 +180,7 @@ public class Snatched implements ModInitializer {
 	}
 
 	private static boolean canSnatch(PlayerEntity snatcher, Entity entity) {
-		if (entity instanceof Snatcher snatcherEntity && snatcherEntity.snatched$getSnatcherSettings().canBeSnatched) {
+		if (entity instanceof Snatcher snatcherEntity && !snatcherEntity.snatched$getSnatcherSettings().canBeSnatched) {
 			return false;
 		}
 		return (
