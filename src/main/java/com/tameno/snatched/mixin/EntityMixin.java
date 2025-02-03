@@ -26,11 +26,4 @@ public abstract class EntityMixin {
         }
         return instance.isConnectedThroughVehicle(entity);
     }
-
-    @Inject(method = "isInsideWall", at = @At("HEAD"), cancellable = true)
-    private void isInsideWallAndNotSnatched(CallbackInfoReturnable<Boolean> callbackInfo) {
-        if (this.getRootVehicle() instanceof HandSeatEntity) {
-            callbackInfo.setReturnValue(false);
-        }
-    }
 }

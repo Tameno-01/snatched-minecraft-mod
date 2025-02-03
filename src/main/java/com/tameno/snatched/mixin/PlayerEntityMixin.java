@@ -71,24 +71,4 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Snatcher
         }
         return settings;
     }
-
-    @Inject(method = "tick", at = @At("HEAD"))
-    private void cancelOffhandSlotIfNecessary(CallbackInfo callbackInfo) {
-        HandSeatEntity handSeat = this.snatched$getCurrentHandSeat(this.getWorld());
-        if (handSeat == null) {
-            return;
-        }
-        ItemStack stack = this.getStackInHand(Hand.OFF_HAND);
-        if (stack.isEmpty()) {
-            return;
-        }
-        this.setStackInHand(Hand.OFF_HAND, ItemStack.EMPTY);
-        if (!this.getWorld().isClient()) {
-            if (this.getInventory().getEmptySlot() == -1) {
-                this.dropStack(stack);
-            } else {
-                this.giveItemStack(stack);
-            }
-        }
-    }
 }

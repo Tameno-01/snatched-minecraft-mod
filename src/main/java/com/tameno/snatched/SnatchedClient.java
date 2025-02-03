@@ -13,7 +13,9 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.text.Text;
 
 import java.util.UUID;
 
@@ -58,24 +60,5 @@ public class SnatchedClient implements ClientModInitializer {
                 wasAttacking = false;
             }
         });
-
-        /* This doesn't work for players, they get desynced or don't move at all. I don't know why
-
-            ClientPlayNetworking.registerGlobalReceiver(Snatched.THROW_PLAYER_ID,
-                    (client, handler, buf, responseSender) -> {
-                final double velX = buf.readDouble();
-                final double velY = buf.readDouble();
-                final double velZ = buf.readDouble();
-
-                client.execute(() -> {
-                    ClientPlayerEntity player = client.player;
-                    if (player == null) return;
-                    player.dismountVehicle();
-                    player.addVelocity(velX, velY, velZ);
-                    player.velocityDirty = true;
-                    player.sendMessage(Text.literal("x:" + velX + ", y:" + velY + ", z:" + velZ), true);
-                });
-            });
-         */
     }
 }

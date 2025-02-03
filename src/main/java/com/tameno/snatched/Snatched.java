@@ -7,15 +7,21 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
+import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.projectile.thrown.SnowballEntity;
+import net.minecraft.item.SnowballItem;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -24,6 +30,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,12 +41,14 @@ import java.util.UUID;
 public class Snatched implements ModInitializer {
 	public static String MOD_ID = "snatched";
     public static Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+	public static final GameRules.Key<GameRules.IntRule> SIZE_THRESHOLD = GameRuleRegistry.register(
+		"snatchedSizeThreshold",
+		GameRules.Category.PLAYER,
+		GameRuleFactory.createIntRule(75, 0)
+	);
 	public static Identifier SNATCHER_SETTINGS_SYNC_ID = new Identifier(MOD_ID, "sync_snatcher_settings");
 	public static HashMap<UUID, SnatcherSettings> allSnatcherSettings = new HashMap<UUID, SnatcherSettings>();
 	public static final Identifier ATTACK_AIR_PACKET_ID = new Identifier(MOD_ID, "attacked_air");
-	/* This doesn't work for players, they get desynced or don't move at all. I don't know why
-		public static final Identifier THROW_PLAYER_ID = new Identifier(MOD_ID, "throw_player");
-	 */
 
 	@Override
 	public void onInitialize() {
@@ -52,15 +61,12 @@ public class Snatched implements ModInitializer {
 
 			Snatcher snatcherPlayer = (Snatcher) player;
 
+			double sizeThreshold = ((double) world.getGameRules().getInt(SIZE_THRESHOLD)) / 100.0;
+
 			boolean willSnatch = (
 				player.isSneaking()
-				&& (
-					player.getStackInHand(Hand.OFF_HAND).isEmpty()
-					|| player.getStackInHand((Hand.MAIN_HAND)).isEmpty()
-				)
-				&& canSnatch(player, entity)
+				&& canSnatch(player, entity, sizeThreshold)
 				&& snatcherPlayer.snatched$getCurrentHandSeat(world) == null
-				&& (!isInSnatchChain(snatcherPlayer, entity, world))
 			);
 
 			if (world.isClient()) {
@@ -116,7 +122,6 @@ public class Snatched implements ModInitializer {
 			snatcherPlayer.snatched$setCurrentHandSeat(null);
 
 			return ActionResult.SUCCESS;
-
 		});
 
 		ServerPlayNetworking.registerGlobalReceiver(Snatched.ATTACK_AIR_PACKET_ID,
@@ -130,24 +135,15 @@ public class Snatched implements ModInitializer {
 				final Vec3d lookDirection = player.getRotationVector();
 				final double launchPower = Math.sqrt(getSize(player));
 				final Vec3d velocity = lookDirection.multiply(launchPower);
-				/* This doesn't work for players, they get desynced or don't move at all. I don't know why
-					if (entity instanceof ServerPlayerEntity serverPlayer) {
-						serverPlayer.dismountVehicle();
-						serverPlayer.addVelocity(velocity);
-						entity.velocityDirty = true;
-						PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());
-						data.writeDouble(velocity.x);
-						data.writeDouble(velocity.y);
-						data.writeDouble(velocity.z);
-						ServerPlayNetworking.send(serverPlayer, Snatched.THROW_PLAYER_ID, data);
-						System.out.println("Throwing player...");
-					}
-				 */
-				if (!(entity instanceof ServerPlayerEntity)){
+				if (entity instanceof ServerPlayerEntity serverPlayer) {
+					serverPlayer.dismountVehicle();
+					serverPlayer.addVelocity(velocity);
+					entity.velocityDirty = true;
+					entity.velocityModified = true;
+				} else {
 					entity.dismountVehicle();
 					entity.setVelocity(velocity);
 					entity.velocityDirty = true;
-					System.out.println("Throwing mob...");
 				}
 			}
 		});
@@ -179,7 +175,7 @@ public class Snatched implements ModInitializer {
 		return false;
 	}
 
-	private static boolean canSnatch(PlayerEntity snatcher, Entity entity) {
+	private static boolean canSnatch(PlayerEntity snatcher, Entity entity, double sizeThreshold) {
 		if (entity instanceof Snatcher snatcherEntity && !snatcherEntity.snatched$getSnatcherSettings().canBeSnatched) {
 			return false;
 		}
@@ -188,7 +184,7 @@ public class Snatched implements ModInitializer {
 			&& entity.getFirstPassenger() == null
 			&& (!(entity instanceof ShulkerEntity))
 			&& (!entity.isSneaking())
-			&& getSize(snatcher) / getSize(entity) >= 1.75
+			&& getSize(snatcher) * sizeThreshold >= getSize(entity)
 		);
 	}
 
