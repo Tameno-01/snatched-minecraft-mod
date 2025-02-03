@@ -20,7 +20,7 @@ public class SnatcherSettings {
 
     public static SnatcherSettings localInstance;
 
-    public Vec3d holdPosition = new Vec3d(0.18, -0.2, 0.25);
+    public Vec3d holdPosition = new Vec3d(0.0, -0.2, 0.25);
 
     public boolean flipWhenUsingLeftHandAsMainHand = true;
 

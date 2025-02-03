@@ -4,22 +4,18 @@ import com.tameno.snatched.entity.ModEntities;
 import com.tameno.snatched.config.SnatcherSettings;
 import com.tameno.snatched.entity.custom.HandSeatEntity;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.Event;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.loader.impl.game.LibClassifier;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -31,6 +27,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.netty.buffer.Unpooled;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -40,11 +37,17 @@ public class Snatched implements ModInitializer {
     public static Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	public static Identifier SNATCHER_SETTINGS_SYNC_ID = new Identifier(MOD_ID, "sync_snatcher_settings");
 	public static HashMap<UUID, SnatcherSettings> allSnatcherSettings = new HashMap<UUID, SnatcherSettings>();
+	public static final Identifier ATTACK_AIR_PACKET_ID = new Identifier(MOD_ID, "attacked_air");
+	/* This doesn't work for players, they get desynced or don't move at all. I don't know why
+		public static final Identifier THROW_PLAYER_ID = new Identifier(MOD_ID, "throw_player");
+	 */
 
 	@Override
 	public void onInitialize() {
 
 		ModEntities.registerModEntities();
+
+		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !(entity.getRootVehicle() instanceof HandSeatEntity));
 
 		UseEntityCallback.EVENT.register((PlayerEntity player, World world, Hand hand, Entity entity, EntityHitResult hitResult) -> {
 
@@ -107,6 +110,7 @@ public class Snatched implements ModInitializer {
 			Vec3d releasePos = releasePosBlock.toCenterPos();
 			releasePos = releasePos.add(0.0, -0.5, 0.0);
 			Entity snatchedEntity = handSeat.getFirstPassenger();
+			if (snatchedEntity == null) return ActionResult.PASS;
 			snatchedEntity.dismountVehicle();
 			snatchedEntity.setPosition(releasePos);
 
@@ -116,8 +120,41 @@ public class Snatched implements ModInitializer {
 
 		});
 
+		ServerPlayNetworking.registerGlobalReceiver(Snatched.ATTACK_AIR_PACKET_ID,
+				(server, player, handler, buf, responseSender) -> {
+			if (player instanceof Snatcher snatcher) {
+				final HandSeatEntity handSeat = snatcher.snatched$getCurrentHandSeat(player.getWorld());
+				if (handSeat == null) return;
+				final Entity entity = handSeat.getFirstPassenger();
+				if (entity == null) return;
+
+				final Vec3d lookDirection = player.getRotationVector();
+				final double launchPower = Math.sqrt(getSize(player));
+				final Vec3d velocity = lookDirection.multiply(launchPower);
+				/* This doesn't work for players, they get desynced or don't move at all. I don't know why
+					if (entity instanceof ServerPlayerEntity serverPlayer) {
+						serverPlayer.dismountVehicle();
+						serverPlayer.addVelocity(velocity);
+						entity.velocityDirty = true;
+						PacketByteBuf data = new PacketByteBuf(Unpooled.buffer());
+						data.writeDouble(velocity.x);
+						data.writeDouble(velocity.y);
+						data.writeDouble(velocity.z);
+						ServerPlayNetworking.send(serverPlayer, Snatched.THROW_PLAYER_ID, data);
+						System.out.println("Throwing player...");
+					}
+				 */
+				if (!(entity instanceof ServerPlayerEntity)){
+					entity.dismountVehicle();
+					entity.setVelocity(velocity);
+					entity.velocityDirty = true;
+					System.out.println("Throwing mob...");
+				}
+			}
+		});
+
 		ServerPlayNetworking.registerGlobalReceiver(Snatched.SNATCHER_SETTINGS_SYNC_ID,
-				(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buffer, PacketSender responseSender) -> {
+				(server, player, handler, buffer, responseSender) -> {
 			SnatcherSettings playerSettings = new SnatcherSettings();
 			playerSettings.readFromBuf(buffer);
 			PacketByteBuf newBuffer = PacketByteBufs.create();
@@ -154,9 +191,8 @@ public class Snatched implements ModInitializer {
 	}
 
 	public static double getSize(Entity entity) {
-		if (entity instanceof PlayerEntity) {
-			PlayerEntity player = (PlayerEntity) entity;
-			double baseHeight = player.getHeight();
+		if (entity instanceof PlayerEntity player) {
+            double baseHeight = player.getHeight();
 			if (player.isSneaking()) {
 				return baseHeight * 1.2;
 			}
