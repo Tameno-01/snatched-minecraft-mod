@@ -12,16 +12,12 @@ import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.projectile.thrown.SnowballEntity;
-import net.minecraft.item.SnowballItem;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -55,7 +51,12 @@ public class Snatched implements ModInitializer {
 
 		ModEntities.registerModEntities();
 
-		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !(entity.getRootVehicle() instanceof HandSeatEntity));
+		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+			if (entity.getRootVehicle() instanceof HandSeatEntity) {
+				return !source.getType().msgId().equals("inWall");
+			}
+			return true;
+		});
 
 		UseEntityCallback.EVENT.register((PlayerEntity player, World world, Hand hand, Entity entity, EntityHitResult hitResult) -> {
 
