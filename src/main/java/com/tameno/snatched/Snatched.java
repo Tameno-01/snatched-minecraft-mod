@@ -42,6 +42,11 @@ public class Snatched implements ModInitializer {
 		GameRules.Category.PLAYER,
 		GameRuleFactory.createIntRule(75, 0)
 	);
+	public static final GameRules.Key<GameRules.IntRule> CAPPED_THROW_SPEED = GameRuleRegistry.register(
+		"snatchedCappedThrowSpeed",
+		GameRules.Category.PLAYER,
+		GameRuleFactory.createIntRule(100, -1)
+	);
 	public static Identifier SNATCHER_SETTINGS_SYNC_ID = new Identifier(MOD_ID, "sync_snatcher_settings");
 	public static HashMap<UUID, SnatcherSettings> allSnatcherSettings = new HashMap<UUID, SnatcherSettings>();
 	public static final Identifier ATTACK_AIR_PACKET_ID = new Identifier(MOD_ID, "attacked_air");
@@ -133,19 +138,39 @@ public class Snatched implements ModInitializer {
 				final Entity entity = handSeat.getFirstPassenger();
 				if (entity == null) return;
 
-				final Vec3d lookDirection = player.getRotationVector();
-				final double launchPower = Math.sqrt(getSize(player));
-				final Vec3d velocity = lookDirection.multiply(launchPower);
-				if (entity instanceof ServerPlayerEntity serverPlayer) {
-					serverPlayer.dismountVehicle();
-					serverPlayer.addVelocity(velocity);
-					entity.velocityDirty = true;
-					entity.velocityModified = true;
-				} else {
-					entity.dismountVehicle();
-					entity.setVelocity(velocity);
-					entity.velocityDirty = true;
-				}
+				final Vec3d lookDirection = new Vec3d(
+					buf.readDouble(),
+					buf.readDouble(),
+					buf.readDouble()
+				);
+				final Vec3d lookDifference = new Vec3d(
+					buf.readDouble(),
+					buf.readDouble(),
+					buf.readDouble()
+				);
+				final Vec3d playerVelocity = new Vec3d(
+					buf.readDouble(),
+					buf.readDouble(),
+					buf.readDouble()
+				);
+				final double launchPower = Math.sqrt(Snatched.getSize(player));
+
+                Vec3d velocity = lookDirection.add(lookDifference);
+
+                World world = player.getWorld();
+                int cappedThrowSpeed = world.getGameRules().getInt(Snatched.CAPPED_THROW_SPEED);
+                double cappedThrowSpeedProper = ((double) cappedThrowSpeed) / 100.0;
+                if (cappedThrowSpeed != -1 && velocity.length() > cappedThrowSpeedProper) {
+					velocity = velocity.normalize().multiply(cappedThrowSpeedProper);
+                }
+
+                velocity = velocity.multiply(launchPower);
+                velocity = velocity.add(playerVelocity.multiply(1.5));
+
+				entity.dismountVehicle();
+				entity.setVelocity(velocity);
+				entity.velocityDirty = true;
+				entity.velocityModified = true;
 			}
 		});
 
