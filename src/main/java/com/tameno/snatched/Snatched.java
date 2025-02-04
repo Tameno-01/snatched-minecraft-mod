@@ -40,7 +40,7 @@ public class Snatched implements ModInitializer {
 	public static final GameRules.Key<GameRules.IntRule> SIZE_THRESHOLD = GameRuleRegistry.register(
 		"snatchedSizeThreshold",
 		GameRules.Category.PLAYER,
-		GameRuleFactory.createIntRule(75, 0)
+		GameRuleFactory.createIntRule(75, -1)
 	);
 	public static final GameRules.Key<GameRules.IntRule> CAPPED_THROW_SPEED = GameRuleRegistry.register(
 		"snatchedCappedThrowSpeed",
@@ -67,11 +67,9 @@ public class Snatched implements ModInitializer {
 
 			Snatcher snatcherPlayer = (Snatcher) player;
 
-			double sizeThreshold = ((double) world.getGameRules().getInt(SIZE_THRESHOLD)) / 100.0;
-
 			boolean willSnatch = (
 				player.isSneaking()
-				&& canSnatch(player, entity, sizeThreshold)
+				&& canSnatch(player, entity, world.getGameRules().getInt(SIZE_THRESHOLD))
 				&& snatcherPlayer.snatched$getCurrentHandSeat(world) == null
 			);
 
@@ -103,7 +101,7 @@ public class Snatched implements ModInitializer {
 			Snatcher snatcherPlayer = (Snatcher) player;
 			HandSeatEntity handSeat = snatcherPlayer.snatched$getCurrentHandSeat(world);
 
-			boolean willUnSnatch = hand == Hand.OFF_HAND && handSeat != null;
+			boolean willUnSnatch = handSeat != null;
 
 			if (!willUnSnatch) {
 				return ActionResult.PASS;
@@ -201,17 +199,30 @@ public class Snatched implements ModInitializer {
 		return false;
 	}
 
-	private static boolean canSnatch(PlayerEntity snatcher, Entity entity, double sizeThreshold) {
-		if (entity instanceof Snatcher snatcherEntity && !snatcherEntity.snatched$getSnatcherSettings().canBeSnatched) {
+	private static boolean canSnatch(PlayerEntity snatcher, Entity entity, int sizeThreshold) {
+		if (!(entity instanceof LivingEntity)) {
 			return false;
 		}
-		return (
-			entity instanceof LivingEntity
-			&& entity.getFirstPassenger() == null
-			&& (!(entity instanceof ShulkerEntity))
-			&& (!entity.isSneaking())
-			&& getSize(snatcher) * sizeThreshold >= getSize(entity)
-		);
+		if (entity.getFirstPassenger() != null) {
+			return false;
+		}
+		if (entity.isSneaking()) {
+			return false;
+		}
+		if ( // Checks player's config file
+			entity instanceof Snatcher snatcherEntity
+			&& !snatcherEntity.snatched$getSnatcherSettings().canBeSnatched
+		) {
+			return false;
+		}
+		if (entity instanceof ShulkerEntity) {
+			return false;
+		}
+		if (sizeThreshold != -1) {
+			double sizeThresholdProper = ((double) sizeThreshold) / 100.0;
+			return getSize(snatcher) * sizeThresholdProper >= getSize(entity);
+		}
+		return true;
 	}
 
 	public static double getSize(Entity entity) {
