@@ -13,15 +13,16 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.text.Text;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.UUID;
 
 public class SnatchedClient implements ClientModInitializer {
 
     private boolean wasAttacking = false;
+
+    private Vec3d lastLookingVector = new Vec3d(0, 0, 0);
 
     @Override
     public void onInitializeClient() {
@@ -54,11 +55,30 @@ public class SnatchedClient implements ClientModInitializer {
             if (isAttacking && hasNoTarget) {
                 if (wasAttacking) return;
                 wasAttacking = true;
-                var buf = new PacketByteBuf(Unpooled.buffer());
+
+                final Vec3d lookDirection = client.player.getRotationVector();
+                final Vec3d lookDifference = lookDirection.subtract(lastLookingVector);
+                final Vec3d velocity = client.player.getVelocity();
+
+                PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+
+                buf.writeDouble(lookDirection.x);
+                buf.writeDouble(lookDirection.y);
+                buf.writeDouble(lookDirection.z);
+
+                buf.writeDouble(lookDifference.x);
+                buf.writeDouble(lookDifference.y);
+                buf.writeDouble(lookDifference.z);
+
+                buf.writeDouble(velocity.getX());
+                buf.writeDouble(velocity.getY());
+                buf.writeDouble(velocity.getZ());
+
                 ClientPlayNetworking.send(Snatched.ATTACK_AIR_PACKET_ID, buf);
             } else {
                 wasAttacking = false;
             }
+            lastLookingVector = client.player.getRotationVector();
         });
     }
 }
