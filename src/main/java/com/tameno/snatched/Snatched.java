@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -31,6 +32,7 @@ import net.minecraft.world.World;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -50,6 +52,7 @@ public class Snatched implements ModInitializer {
 	public static Identifier SNATCHER_SETTINGS_SYNC_ID = new Identifier(MOD_ID, "sync_snatcher_settings");
 	public static HashMap<UUID, SnatcherSettings> allSnatcherSettings = new HashMap<UUID, SnatcherSettings>();
 	public static final Identifier ATTACK_AIR_PACKET_ID = new Identifier(MOD_ID, "attacked_air");
+	private static Boolean isPehkuiLoaded = null;
 
 	@Override
 	public void onInitialize() {
@@ -164,6 +167,10 @@ public class Snatched implements ModInitializer {
 
                 velocity = velocity.multiply(launchPower);
                 velocity = velocity.add(playerVelocity.multiply(1.5));
+				final float motionScale = getMotionScale(entity);
+				if (motionScale != 1F) {
+					velocity = velocity.multiply(1.0 / motionScale);
+				}
 
 				entity.dismountVehicle();
 				entity.setVelocity(velocity);
@@ -240,5 +247,37 @@ public class Snatched implements ModInitializer {
 			return baseHeight;
 		}
 		return entity.getHeight();
+	}
+
+	public static boolean getIsPehkuiLoaded() {
+		if (isPehkuiLoaded == null) {
+			isPehkuiLoaded = FabricLoader.getInstance().isModLoaded("pehkui");
+		}
+		return isPehkuiLoaded;
+	}
+
+	// If Pehkui is installed, use get the motion scale of a given player
+	public static float getMotionScale(Entity entity) {
+		if (!Snatched.getIsPehkuiLoaded()) return 1.0F;
+
+		try {
+			// Access the ScaleUtils class dynamically
+			Class<?> scaleUtilsClass = Class.forName("virtuoel.pehkui.util.ScaleUtils");
+
+			// Access the getVisibilityScale method that takes an Entity and tickDelta
+			Method getVisibilityScaleMethod = scaleUtilsClass.getDeclaredMethod("getMotionScale", Entity.class);
+
+			// Make the method accessible in case it's private or protected
+			getVisibilityScaleMethod.setAccessible(true);
+
+			// Invoke the method on ScaleUtils class with the provided entity and tickDelta
+			return (float) getVisibilityScaleMethod.invoke(null, entity);
+		} catch (Exception e) {
+			Snatched.LOGGER.error("Pehkui was loaded, but we could not get the visibility scale. See error below:");
+			Snatched.LOGGER.error(e.toString());
+		}
+
+		// Return a default value or throw an exception if reflection fails
+		return 1.0F; // Default scaling factor (no scaling)
 	}
 }
