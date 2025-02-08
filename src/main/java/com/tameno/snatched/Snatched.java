@@ -265,15 +265,15 @@ public class Snatched implements ModInitializer {
 			Class<?> scaleUtilsClass = Class.forName("virtuoel.pehkui.util.ScaleUtils");
 
 			// Access the getVisibilityScale method that takes an Entity and tickDelta
-			Method getVisibilityScaleMethod = scaleUtilsClass.getDeclaredMethod("getMotionScale", Entity.class);
+			Method getMotionScale = scaleUtilsClass.getDeclaredMethod("getMotionScale", Entity.class);
 
 			// Make the method accessible in case it's private or protected
-			getVisibilityScaleMethod.setAccessible(true);
+			getMotionScale.setAccessible(true);
 
 			// Invoke the method on ScaleUtils class with the provided entity and tickDelta
-			return (float) getVisibilityScaleMethod.invoke(null, entity);
+			return (float) getMotionScale.invoke(null, entity);
 		} catch (Exception e) {
-			Snatched.LOGGER.error("Pehkui was loaded, but we could not get the visibility scale. See error below:");
+			Snatched.LOGGER.error("Pehkui was loaded, but we could not get the motion scale. See error below:");
 			Snatched.LOGGER.error(e.toString());
 		}
 
